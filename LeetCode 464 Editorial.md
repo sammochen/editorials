@@ -57,7 +57,7 @@ Let's implement this approach in pseudocode by introducing a method/function tha
 ```python
 bool canWin(target, choices):
     for choice in choices:
-        let nextChoices = choices \ choice 
+        let nextChoices = choices \ choice # All the choices except choice
         let nextTarget = target - choice
 
         if (nextTarget <= 0): # If you can reduce the target to 0 or below, you win!
@@ -70,7 +70,7 @@ bool canWin(target, choices):
 ```
 
 ### Bitmasks
-How do we efficiently remember the states? Since there are only a maximum of 20 choices, and we have to remember whether we can use it (1) or not (0), we can use a bitmask.
+How do we efficiently remember the states? Since there are only a maximum of 20 choices, and the state should remember whether we can use it (1) or not (0), we can use a bitmask.
 
 We will use the binary representation of a number to represent which numbers we can choose: if the bit is on, we can choose it. 
 
@@ -84,11 +84,28 @@ For example:
 
 We will need to use some bit manipulation techniques.
 
-Initially, we have the choice to choose **any number**: this is a number with all choices set at '1'. If we have ```k``` choices, we would need ```k``` '1's, which is ```(1 << k) - 1```.
+Initially, we have the choice to choose **any number**: this is a number with all the choices set at '1'. If we have ```k``` choices, we would need ```k``` '1's, which is ```(1 << k) - 1```.
 
-We will need to check if a bit is on to check if we can **choose** it. With a ```state``` and ```num```, ```(1 << (num-1)) & state``` will be non-zero if it is on, and 0 if it is off.
+```
+3: (1<<3) = 1000, 1000 - 1 = 111
+5: (1<<5) = 100000, 100000 - 1 = 11111
+```
+
+We will need to check if a bit is on to see if we can **choose** it. With a ```state``` and ```num```, ```(1 << (num-1)) & state``` will be non-zero if it is on, and zero if it is off.
+
+```
+state = 110, num = 1:  (1<<(1-1)) = 001, 001 & 110 = 000
+state = 110, num = 2:  (1<<(2-1)) = 010, 010 & 110 = 010
+state = 110, num = 3:  (1<<(3-1)) = 100, 100 & 110 = 100
+```
 
 We will also need to turn a bit off to **remove** it from the choices. With a ```state``` and ```num```, ```~(1 << (num-1)) & state``` will return the state with the ```num``` bit off.
+
+```
+state = 111, num = 1:  (1<<(1-1)) = 001, ~001 = 110, 110 & 111 = 110
+state = 111, num = 2:  (1<<(2-1)) = 010, ~010 = 101, 101 & 111 = 101
+state = 111, num = 3:  (1<<(3-1)) = 100, ~100 = 011, 011 & 111 = 011
+```
 
 By including these bitmasking techniques, our current C++ implementation of the ```canWin``` method is now below:
 
@@ -110,7 +127,7 @@ bool canWin(int target, int choices) {
 ```
 
 ### Memoization
-We need to memoize this function so we do not recalculate visited states. The key is to notice that we **only** need to remember the choices that are available left. 
+We need to memoize this function so we do not recalculate visited states. The key is that we **only** need to remember the choices that are available left. 
 We can introduce a ```dp``` array that is set to -1 if it has not been visited, 0 if the player loses, and 1 if the player wins. The size of this array needs to be at least 2^20.
 
 ### Gotchas
