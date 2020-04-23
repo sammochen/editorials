@@ -54,10 +54,10 @@ How do we know if the player will win or lose? In a two player game, you can win
 
 Let's implement this approach in pseudocode by introducing a method/function that returns whether the current player can win or not, given those parameters. 
 
-```
+```python
 bool canWin(target, choices):
     for choice in choices:
-        let nextChoices = choices \ choice # All the choices except choice
+        let nextChoices = choices \ choice 
         let nextTarget = target - choice
 
         if (nextTarget <= 0): # If you can reduce the target to 0 or below, you win!
