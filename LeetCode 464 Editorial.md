@@ -50,7 +50,7 @@ Take the 3: (target: 5-3=2, choices: [1,2])
 Notice that three subproblems were formed, with lower target values and smaller range of choices. The appearance of **repeated subproblems** hints that this question should be approached using dynamic programming.
 
 ### Minimax
-How do we know if the player will win or lose? Based of the idea of Minimax: in a two player game, you can win if any of your moves **force** the opponent to lose; you will lose if you **cannot** force them to lose. Of course, in this game, you will win if you can decrease the target to below 0.
+How do we know if the player will win or lose? In a two player game, you can win if any of your moves **force** the opponent to lose; you will lose if you **cannot** force them to lose. Of course, in this game, you will also win if you can decrease the target to 0 or below.
 
 Let's implement this approach in pseudocode by introducing a method/function that returns whether the current player can win or not, given those parameters. 
 
@@ -70,7 +70,7 @@ bool canWin(target, choices):
 ```
 
 ### Bitmasks
-The next problem to tackle is: How do we efficiently remember the states? Since there are only a maximum of 20 choices and we have to remember whether we can use it (1) or not (0), we can use a bitmask.
+How do we efficiently remember the states? Since there are only a maximum of 20 choices, and we have to remember whether we can use it (1) or not (0), we can use a bitmask.
 
 We will use the binary representation of a number to represent which numbers we can choose: if the bit is on, we can choose it. 
 
@@ -82,15 +82,15 @@ For example:
 12: 1100 -> [4,3]
 ```
 
-So what bit manipulation operations do we need?
+We will need to use some bit manipulation techniques.
 
-Initially, we have the choice to choose any number. If we have ```k``` choices, we would need ```k``` '1's, which is ```(1 << k) - 1```.
+Initially, we have the choice to choose **any number**: this is a number with all choices set at '1'. If we have ```k``` choices, we would need ```k``` '1's, which is ```(1 << k) - 1```.
 
-We will need to check if a bit is on to 'choose' it. With a ```state``` and ```num```, ```(1 << (num-1)) & state``` will return 0 if it is off.
+We will need to check if a bit is on to check if we can **choose** it. With a ```state``` and ```num```, ```(1 << (num-1)) & state``` will be non-zero if it is on, and 0 if it is off.
 
-We will also need to turn a bit off to 'remove' it from the choices. With a ```state``` and ```num```, ```~(1 << (num-1)) & state``` will return state but without ```num``` bit.
+We will also need to turn a bit off to **remove** it from the choices. With a ```state``` and ```num```, ```~(1 << (num-1)) & state``` will return the state with the ```num``` bit off.
 
-Our current C++ implementation of the ```canWin``` method is now below:
+By including these bitmasking techniques, our current C++ implementation of the ```canWin``` method is now below:
 
 ```c++
 int maxChoice;
@@ -114,8 +114,10 @@ We need to memoize this function so we do not recalculate visited states. The ke
 We can introduce a ```dp``` array that is set to -1 if it has not been visited, 0 if the player loses, and 1 if the player wins. The size of this array needs to be at least 2^20.
 
 ## Complexity
-As there are ```2^maxChoosableInteger``` states, the memory complexity is ```O(2^maxChoosableInteger)```. In each of the ```2^maxChoosableInteger``` states, there is a for loop of size ```maxChoosableInteger```, resulting to a final runtime complexity of ```O(maxChoosableInteger * 2^maxChoosableInteger)```
+As there are ```2^maxChoosableInteger``` states, the memory complexity is ```O(2^maxChoosableInteger)```.  
+In each of the ```2^maxChoosableInteger``` states, there is a for loop of size ```maxChoosableInteger```, resulting to a total runtime complexity of ```O(maxChoosableInteger * 2^maxChoosableInteger)```
 
+## Gotchas
 Don't forget about the edge cases! If the target is too high, even with all the choices, the player cannot win.
 
 
