@@ -32,7 +32,7 @@ Same with other integers chosen by the first player, the second player will alwa
 ```
 
 ## Summary
-The question feels like a standard dynamic programming question, where we see if it is possible to reach a target with a set of choices. However, the restriction where we cannot choose repeated values means we have to introduce a way to remember which numbers are left to choose from. The small ```maxChoosableInteger``` value means that we can remember the **set** of which numbers are left.
+At first glance, the question feels like a standard dynamic programming question, where we see if it is possible to reach some target with a set of choices. However, the restriction where we cannot choose repeated values means we have to introduce a way to remember which numbers are left to choose from. The small ```maxChoosableInteger``` value means that we can remember the **set** of which numbers are left.
 
 ### Tags
 Dynamic Programming, Bit Manipulation, Minimax
@@ -52,12 +52,12 @@ Notice that three subproblems were formed, with lower target values and smaller 
 ### Minimax
 How do we know if the player will win or lose? In a two player game, you can win if any of your moves **force** the opponent to lose; you will lose if you **cannot** force them to lose. Of course, in this game, you will also win if you can decrease the target to 0 or below.
 
-Let's implement this approach in pseudocode by introducing a method/function that returns whether the current player can win or not, given those parameters. 
+Let's implement this approach in pseudocode by introducing a method that returns whether the current player can win or not, given those parameters. 
 
-```python
+```
 bool canWin(target, choices):
     for choice in choices:
-        let nextChoices = choices \ choice # All the choices except choice
+        let nextChoices = choices \ choice # The set of all choices except choice
         let nextTarget = target - choice
 
         if (nextTarget <= 0): # If you can reduce the target to 0 or below, you win!
@@ -69,10 +69,10 @@ bool canWin(target, choices):
     return false
 ```
 
-### Bitmasks
-How do we efficiently remember the states? Since there are only a maximum of 20 choices, and the state should remember whether we can use it (1) or not (0), we can use a bitmask.
+The method is recursive and currently has an exponential complexity. We will improve this later on.
 
-We will use the binary representation of a number to represent which numbers we can choose: if the bit is on, we can choose it. 
+### Bitmasks
+We can capture the available choices, our current state, using the binary representation of an integer. This is as there are only a maximum of 20 numbers to choose from, and each number can be available (1), or not available (0).
 
 For example:
 ```
@@ -82,32 +82,45 @@ For example:
 12: 1100 -> [4,3]
 ```
 
-We will need to use some bit manipulation techniques.
+We will refer to the currently available choices as our **state**. To change and access the contents of the state, we will need to use some bit manipulation techniques.
 
 Initially, we have the choice to choose **any number**: this is a number with all the choices set at '1'. If we have ```k``` choices, we would need ```k``` '1's, which is ```(1 << k) - 1```.
 
 ```
-3: (1<<3) = 1000, 1000 - 1 = 111
-5: (1<<5) = 100000, 100000 - 1 = 11111
+k = 3
+  (1<<3) = 1000
+  1000 - 1 = 111
+
+k = 5
+  (1<<5) = 100000
+  100000 - 1 = 11111
 ```
 
 We will need to check if a bit is on to see if we can **choose** it. With a ```state``` and ```num```, ```(1 << (num-1)) & state``` will be non-zero if it is on, and zero if it is off.
 
 ```
-state = 110, num = 1:  (1<<(1-1)) = 001, 001 & 110 = 000
-state = 110, num = 2:  (1<<(2-1)) = 010, 010 & 110 = 010
-state = 110, num = 3:  (1<<(3-1)) = 100, 100 & 110 = 100
+state = 110, num = 1
+  (1<<(1-1)) = 001
+  001 & 110 = 000 -> Num 1 bit is off
+
+state = 110, num = 2
+  (1<<(2-1)) = 010
+  010 & 110 = 010 -> Num 2 bit is on
 ```
 
 We will also need to turn a bit off to **remove** it from the choices. With a ```state``` and ```num```, ```~(1 << (num-1)) & state``` will return the state with the ```num``` bit off.
 
 ```
-state = 111, num = 1:  (1<<(1-1)) = 001, ~001 = 110, 110 & 111 = 110
-state = 111, num = 2:  (1<<(2-1)) = 010, ~010 = 101, 101 & 111 = 101
-state = 111, num = 3:  (1<<(3-1)) = 100, ~100 = 011, 011 & 111 = 011
+state = 111, num = 2
+  (1<<(2-1)) = 010
+  ~010 & 111 = 101 -> Removed the num 2 bit
+
+state = 111, num = 3
+  (1<<(3-1)) = 100
+  ~100 & 111 = 011 -> Removed the num 3 bit
 ```
 
-By including these bitmasking techniques, our current C++ implementation of the ```canWin``` method is now below:
+By using these bit manipultation techniques, our current C++ implementation of the ```canWin``` method is now below:
 
 ```c++
 int maxChoice;
@@ -115,7 +128,7 @@ int maxChoice;
 bool canWin(int target, int choices) {
     for (int choice = 1; choice <= maxChoice; choice++) { // Go through each of the possible choices
         if (((1 << (choice - 1)) & choices != 0) { // If the bit is on
-            int nextChoices = ~(1 << (choice - 1)) & choices;
+            int nextChoices = ~(1 << (choice - 1)) & choices; // Turn this choice bit off
             int nextTarget = target - choice;
 
             if (nextTarget <= 0) return true;
@@ -128,10 +141,10 @@ bool canWin(int target, int choices) {
 
 ### Memoization
 We need to memoize this function so we do not recalculate visited states. The key is that we **only** need to remember the choices that are available left. 
-We can introduce a ```dp``` array that is set to -1 if it has not been visited, 0 if the player loses, and 1 if the player wins. The size of this array needs to be at least 2^20.
+We can introduce a ```dp``` array that is set to -1 if it has not been visited, 0 if the player loses, and 1 if the player wins. The size of this array needs to be at least ```2^20```.
 
 ### Gotchas
-Don't forget about the edge cases! If the target is too high, even with all the choices, the player cannot win.
+Don't forget about the edge cases! If the target is too high even with all the choices, the player cannot win.
 
 ## Complexity
 As there are ```2^maxChoosableInteger``` states, the memory complexity is ```O(2^maxChoosableInteger)```.  
