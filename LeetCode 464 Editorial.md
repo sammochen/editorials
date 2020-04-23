@@ -57,13 +57,13 @@ Let's implement this approach in pseudocode by introducing a method/function tha
 ```
 bool canWin(target, choices):
     for choice in choices:
-        let nextChoices = choices \ choice 
+        let nextChoices = choices \ choice # All the choices except choice
         let nextTarget = target - choice
 
-        if (nextTarget <= 0):
+        if (nextTarget <= 0): # If you can reduce the target to 0 or below, you win!
             return true
 
-        if (canWin(nextTarget, nextChoices) == false):
+        if (canWin(nextTarget, nextChoices) == false): # If you can force the opponent to lose, you win!
             return true
 
     return false
