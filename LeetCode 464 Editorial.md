@@ -113,12 +113,12 @@ bool canWin(int target, int choices) {
 We need to memoize this function so we do not recalculate visited states. The key is to notice that we **only** need to remember the choices that are available left. 
 We can introduce a ```dp``` array that is set to -1 if it has not been visited, 0 if the player loses, and 1 if the player wins. The size of this array needs to be at least 2^20.
 
+### Gotchas
+Don't forget about the edge cases! If the target is too high, even with all the choices, the player cannot win.
+
 ## Complexity
 As there are ```2^maxChoosableInteger``` states, the memory complexity is ```O(2^maxChoosableInteger)```.  
 In each of the ```2^maxChoosableInteger``` states, there is a for loop of size ```maxChoosableInteger```, resulting to a total runtime complexity of ```O(maxChoosableInteger * 2^maxChoosableInteger)```
-
-## Gotchas
-Don't forget about the edge cases! If the target is too high, even with all the choices, the player cannot win.
 
 
 ## Full Code Solution
